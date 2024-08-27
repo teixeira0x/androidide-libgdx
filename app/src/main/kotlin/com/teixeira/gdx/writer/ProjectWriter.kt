@@ -7,7 +7,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 class ProjectWriter(
-  val name: String,
+  val projectName: String,
   val packageName: String,
   val minSdk: String,
   val targetSdk: String,
@@ -18,7 +18,7 @@ class ProjectWriter(
   }
 
   fun write(sendMessage: (message: String) -> Unit) {
-    val projectDir = File(ANDROIDIDEPROJECTS, name)
+    val projectDir = File(ANDROIDIDEPROJECTS, projectName)
 
     if (projectDir.exists()) {
       sendMessage("There is already a project with this name!")
@@ -63,7 +63,7 @@ class ProjectWriter(
 
             file.writeText(
               content
-                .replace("\$project_name", name)
+                .replace("\$project_name", projectName)
                 .replace("\$package_name", packageName)
                 .replace("\$minSdk", minSdk)
                 .replace("\$targetSdk", targetSdk),
