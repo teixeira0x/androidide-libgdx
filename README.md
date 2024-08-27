@@ -10,6 +10,7 @@ You can run the jar to create the project, or just write a command line with the
 java -jar androidide-libgdx.jar [OPTIONS]
 --name <arg>        Project name.
 --package <arg>     Project package name.
+--language <arg>    Project language, java or kotlin.
 --minSdk <arg>      The minimum sdk of the project.
 --targetSdk <arg>   The project's target sdk.
 ```
