@@ -12,6 +12,7 @@ fun getCommandOptions(): Options {
     addOption(
       Option.builder().longOpt(OPT_PACKAGE).desc(OPT_PACKAGE_DESC).hasArg().required(true).build()
     )
+    addOption(Option.builder().longOpt(OPT_LANGUAGE).desc(OPT_LANGUAGE_DESC).hasArg().build())
     addOption(Option.builder().longOpt(OPT_MIN_SDK).desc(OPT_MIN_SDK_DESC).hasArg().build())
     addOption(Option.builder().longOpt(OPT_TARGET_SDK).desc(OPT_TARGET_SDK_DESC).hasArg().build())
   }

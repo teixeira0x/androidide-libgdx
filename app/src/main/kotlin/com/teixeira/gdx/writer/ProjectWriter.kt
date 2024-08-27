@@ -2,11 +2,11 @@ package com.teixeira.gdx.writer
 
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 class ProjectWriter(
+  val language: String,
   val projectName: String,
   val packageName: String,
   val minSdk: String,
@@ -15,6 +15,7 @@ class ProjectWriter(
 
   companion object {
     const val ANDROIDIDEPROJECTS = "/sdcard/AndroidIDEProjects"
+    val SOURCE_FILES_REGEX = Regex("^(gradle|java|kt|xml)$")
   }
 
   fun write(sendMessage: (message: String) -> Unit) {
@@ -23,24 +24,22 @@ class ProjectWriter(
     if (projectDir.exists()) {
       sendMessage("There is already a project with this name!")
       return
-    } else {
-      projectDir.mkdirs()
     }
 
-    sendMessage("Creating project...")
+    projectDir.mkdirs()
     unzipTemplate(projectDir, sendMessage)
-    sendMessage("Project created...")
   }
 
   fun unzipTemplate(projectDir: File, sendMessage: (message: String) -> Unit) {
-    val resourceStream = ProjectWriter::class.java.getResourceAsStream("/template_kotlin.zip")
+    val resourceStream = ProjectWriter::class.java.getResourceAsStream("/template_$language.zip")
     if (resourceStream == null) {
       sendMessage("Template ZIP file not found!")
       return
     }
 
     resourceStream.use { inputStream ->
-      sendMessage("Extracting template")
+      sendMessage("Creating project...")
+
       val buffer = ByteArray(1024)
       val zis = ZipInputStream(inputStream)
 
@@ -58,7 +57,7 @@ class ProjectWriter(
         } else {
           file.parentFile?.mkdirs()
 
-          if (file.extension == "gradle" || file.extension == "kt" || file.extension == "xml") {
+          if (file.extension.matches(SOURCE_FILES_REGEX)) {
             var content = zis.readBytes().toString(Charsets.UTF_8)
 
             file.writeText(
@@ -77,11 +76,46 @@ class ProjectWriter(
             }
           }
         }
+
         entry = zis.nextEntry
       }
       zis.closeEntry()
       zis.close()
-      sendMessage("Template extracted!")
+
+      unzipGradleWrapper(projectDir, sendMessage)
     }
+  }
+
+  private fun unzipGradleWrapper(projectDir: File, sendMessage: (message: String) -> Unit) {
+    val resourceStream = ProjectWriter::class.java.getResourceAsStream("/gradle_wrapper.zip")
+    if (resourceStream == null) {
+      sendMessage("Gradle Wrapper ZIP file not found!")
+      return
+    }
+
+    resourceStream.use { inputStream ->
+      val buffer = ByteArray(1024)
+      val zis = ZipInputStream(inputStream)
+
+      var entry: ZipEntry? = zis.nextEntry
+      while (entry != null) {
+        val file = File(projectDir, entry.name)
+        if (entry.isDirectory) {
+          file.mkdirs()
+        } else {
+          file.parentFile?.mkdirs()
+          val fos = FileOutputStream(file)
+          var len: Int
+          while (zis.read(buffer).also { len = it } > 0) {
+            fos.write(buffer, 0, len)
+          }
+        }
+
+        entry = zis.nextEntry
+      }
+      zis.closeEntry()
+      zis.close()
+    }
+    sendMessage("Project created.")
   }
 }
