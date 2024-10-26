@@ -38,7 +38,7 @@ class ProjectWriter(
     }
 
     resourceStream.use { inputStream ->
-      sendMessage("Creating project...")
+      sendMessage("Extracting project template ...")
 
       val buffer = ByteArray(1024)
       val zis = ZipInputStream(inputStream)
@@ -53,8 +53,10 @@ class ProjectWriter(
         val file = File(projectDir, name)
 
         if (entry.isDirectory) {
+          sendMessage("Creating dir: ${file.canonicalPath}")
           file.mkdirs()
         } else {
+          sendMessage("Extracting file: ${file.canonicalPath}")
           file.parentFile?.mkdirs()
 
           if (file.extension.matches(SOURCE_FILES_REGEX)) {
@@ -77,12 +79,15 @@ class ProjectWriter(
           }
         }
 
+        zis.closeEntry()
         entry = zis.nextEntry
       }
       zis.closeEntry()
       zis.close()
 
       unzipGradleWrapper(projectDir, sendMessage)
+
+      sendMessage("Project created in: ${projectDir.canonicalPath}")
     }
   }
 
@@ -110,12 +115,13 @@ class ProjectWriter(
             fos.write(buffer, 0, len)
           }
         }
-
+        zis.closeEntry()
         entry = zis.nextEntry
       }
       zis.closeEntry()
       zis.close()
+
+      sendMessage("Gradle Wrapper extracted.")
     }
-    sendMessage("Project created.")
   }
 }
